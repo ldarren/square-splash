@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>.:React:.</title>
+<style>
+*,*::after,*::before{
+    margin:0;
+    padding:0;
+    box-sizing:border-box
+}
+html,body,.root{
+    height: 100%
+}
+.box{
+    position:absolute;
+    display:block;
+    height:64px;
+    width:64px;
+    line-height:64px;
+    border:1px solid black;
+    font-size: 16px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+</style>
+</head>
+<body>
+<script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+<script>
+const Rand = Math.random
+const Floor = Math.floor
+const body = document.body
+const COUNT = 10000
+
+let cwidth = body.clientWidth
+let cheight = body.clientHeight
+
+function pad(num){
+    const str = '00'+Floor(num).toString(16)
+    return str.substr(-2)
+}
+
+function getColor(idx){
+    return `#${pad(256*Rand())}${pad(256*Rand())}${pad(256*Rand())}`
+}
+
+let timerHdl
+function start(){
+    let removedId = 0
+    timerHdl = setInterval(() => {
+        if (30 <= removedId) return stop()
+        root.onBoxRemoval(removedId++)
+    }, 500)
+}
+function stop(){
+    clearTimeout(timerHdl)
+}
+
+class Box extends React.Component {
+    onClick(e) {
+        const target = e.target
+        if (!target.classList.contains('box')) return 
+        this.props.delete(target.id.substr(3))
+    }
+    render() {
+    const p = this.props
+    return React.createElement('div', {
+            id: 'box'+p.id,
+            className: 'box',
+            onClick: this.onClick.bind(this),
+            style:{
+                left: (p.x - 32)+'px',
+                top: (p.y - 32)+'px',
+                background: p.color
+            }
+        }, `${p.value}`);
+    }
+}
+
+class Root extends React.Component {
+    constructor(props) {
+        super(props)
+        const boxes = new Array(COUNT)
+        boxes.fill(0)
+        this.palette = boxes.map( (_, id) => ({value: id, color: getColor()}) )
+        this.state = { boxes: boxes.map( (_, id) => ({id, key: id, x: Rand() * cwidth, y: Rand() * cheight}) ) }
+        this.onBoxRemoval = this.onBoxRemoval.bind(this)
+    }
+    onBoxRemoval(id) {
+        this.setState(prevState => ({
+            boxes: prevState.boxes.filter( item => item.id != id)
+        }))
+    }
+    render() {
+        return React.createElement('div', {className: this.props.className}, this.state.boxes.map((b, i) => React.createElement(Box, Object.assign({delete: this.onBoxRemoval}, b, this.palette[i]) )))
+    }
+}
+
+const root = ReactDOM.render( React.createElement(Root, {className: 'root'}), body )
+</script>
+</body>
+</html>

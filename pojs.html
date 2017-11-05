@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>.:POJS:.</title>
+<style>
+*,*::after,*::before{
+    margin:0;
+    padding:0;
+    box-sizing:border-box
+}
+html,body{
+    height: 100%
+}
+.box{
+    position:absolute;
+    display:block;
+    height:64px;
+    width:64px;
+    line-height:64px;
+    border:1px solid black;
+    font-size: 16px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+}
+</style>
+</head>
+<body>
+</body>
+<script>
+const Rand = Math.random
+const Floor = Math.floor
+const body = document.body
+const palette = []
+const COUNT = 10000
+
+let cwidth = body.clientWidth
+let cheight = body.clientHeight
+
+function pad(num){
+    const str = '00'+Floor(num).toString(16)
+    return str.substr(-2)
+}
+
+function getColor(idx){
+    color = `#${pad(256*Rand())}${pad(256*Rand())}${pad(256*Rand())}`
+    palette.push(color)
+    return color
+}
+
+function createBox(id, x, y, color, text){
+    const ele = document.createElement('div')
+    ele.id = 'box'+id
+    ele.style.cssText = `left:calc(${x}px - 32px);top:calc(${y}px - 32px);background:${color}`
+    ele.classList.add('box')
+    ele.textContent = text
+    body.appendChild(ele)
+}
+
+function updateBox(id){
+    const ele = document.getElementById('box'+(id+1))
+    if (!ele) return
+    ele.id = 'box'+id
+    ele.textContent = id
+    ele.style.background = palette[id]
+}
+
+let timerHdl
+function start(){
+    let removedId = 0
+    timerHdl = setInterval(() => {
+        if (30 <= removedId) return stop()
+        const target = document.getElementById('box'+removedId++)
+        if (!target) return
+        target.parentElement.removeChild(target)
+
+        for (let i = removedId; i < COUNT; i++){
+            updateBox(i)
+        }
+    }, 500)
+}
+function stop(){
+    clearTimeout(timerHdl)
+}
+
+for (let i = 0; i < COUNT; i++){
+    createBox(i, Rand() * cwidth, Rand() * cheight, getColor(i), i)
+}
+
+window.addEventListener('resize', e => {
+    cwidth = body.clientWidth
+    cheight = body.clientHeight
+})
+
+document.addEventListener('click', e => {
+    const target = e.target
+    if (!target.classList.contains('box')) return 
+    const removedId = parseInt(target.textContent)
+    target.parentElement.removeChild(target)
+
+    for (let i = removedId; i < COUNT; i++){
+        updateBox(i)
+    }
+})
+
+</script>
+</html>
